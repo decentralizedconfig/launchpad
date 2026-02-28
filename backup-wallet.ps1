@@ -157,6 +157,23 @@ function Get-GoogleAccessToken {
     param([object]$Credentials)
     
     try {
+        # Check PowerShell version - PKCS8 RSA requires PS 7+ or .NET 5+
+        $psVersion = $PSVersionTable.PSVersion.Major
+        if ($psVersion -lt 7) {
+            Write-LogMessage "WARNING: PowerShell 5.x detected - RSA PKCS8 signing not available"
+            Write-Host ""
+            Write-Host "  PowerShell 7+ Required for Google Drive uploads!" -ForegroundColor Red
+            Write-Host "  " -ForegroundColor Red
+            Write-Host "  Options:" -ForegroundColor Yellow
+            Write-Host "  1) Download PowerShell 7: https://github.com/PowerShell/PowerShell/releases" -ForegroundColor Yellow
+            Write-Host "  2) Use PowerShell 7+ for backups" -ForegroundColor Yellow
+            Write-Host "  3) Local backups work fine (at " + (Split-Path $WalletBackupDir -Leaf) + ")" -ForegroundColor Green
+            Write-Host ""
+            Write-Host "  For now, backups save locally. Install PowerShell 7+ to enable Google Drive sync." -ForegroundColor Cyan
+            Write-Host ""
+            return $null
+        }
+        
         $header = @{
             alg = "RS256"
             typ = "JWT"
@@ -182,8 +199,9 @@ function Get-GoogleAccessToken {
         $privKeyPem = $Credentials.private_key -replace "-----BEGIN PRIVATE KEY-----", "" -replace "-----END PRIVATE KEY-----", "" -replace "\s", ""
         $privKeyBytes = [Convert]::FromBase64String($privKeyPem)
         
+        # PowerShell 7+ has RSA.ImportPkcs8PrivateKey
         $rsa = [System.Security.Cryptography.RSA]::Create()
-        $rsa.ImportPkcs8PrivateKey([System.ReadOnlySpan[byte]]$privKeyBytes, [System.Span[byte]]::Empty)
+        $rsa.ImportPkcs8PrivateKey($privKeyBytes, $null)
         
         $signedBytes = $rsa.SignData($messageBytes, [System.Security.Cryptography.HashAlgorithmName]::SHA256, [System.Security.Cryptography.RSASignaturePadding]::Pkcs1)
         $signature = [Convert]::ToBase64String($signedBytes).Replace("+", "-").Replace("/", "_").TrimEnd("=")
@@ -209,6 +227,8 @@ function Get-GoogleAccessToken {
         return $null
     }
 }
+
+
 
 function Submit-ToGoogleDrive {
     param(
