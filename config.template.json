@@ -1,0 +1,79 @@
+{
+  "version": "1.0.0",
+  "app_name": "WebConnect Wallet Backup",
+  "description": "Interactive wallet backup system with Dropbox integration",
+  "repository": "https://github.com/yourusername/wallet-backup",
+  
+  "storage": {
+    "enabled": true,
+    "destinations": [
+      {
+        "name": "dropbox",
+        "type": "cloud_dropbox",
+        "enabled": true,
+        "access_token": "YOUR_DROPBOX_TOKEN_HERE",
+        "path": "/WebConnect/Wallet_Backups",
+        "description": "Dropbox API v2 token for secure backup storage"
+      }
+    ]
+  },
+
+  "backup": {
+    "enabled": true,
+    "auto_backup": false,
+    "backup_interval": 86400,
+    "retention_days": 30,
+    "compression": false,
+    "encryption": false,
+    "file_format": "txt"
+  },
+
+  "backup_types": {
+    "recovery_phrases": {
+      "enabled": true,
+      "min_words": 12,
+      "max_words": 24,
+      "description": "12 or 24-word seed phrases"
+    },
+    "private_keys": {
+      "enabled": true,
+      "format": "0x...{64 hex chars}",
+      "description": "Ethereum-style private keys"
+    },
+    "keystores": {
+      "enabled": true,
+      "format": "JSON",
+      "description": "Keystore JSON files with passwords"
+    }
+  },
+
+  "directory_structure": {
+    "install_directory": "~/.webconnect",
+    "wallet_backups": "wallet_backups",
+    "logs": "logs",
+    "config": "config"
+  },
+
+  "logging": {
+    "enabled": true,
+    "log_level": "INFO",
+    "log_file": "logs/backup.log",
+    "retention_days": 30
+  },
+
+  "security": {
+    "verify_ssl": true,
+    "local_backup_permissions": "600",
+    "config_permissions": "600",
+    "install_dir_permissions": "700",
+    "data_format": "plaintext"
+  },
+
+  "dropbox_api": {
+    "version": "2",
+    "endpoint": "https://content.dropboxapi.com/2/files/upload",
+    "content_type": "application/octet-stream",
+    "timeout": 30,
+    "retry_attempts": 3
+  }
+}
