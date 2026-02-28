@@ -142,25 +142,35 @@ function Publish-ToDropbox {
     }
     
     try {
+        if (-not (Test-Path $FilePath)) {
+            Write-Error-Custom "Backup file not found: $FilePath"
+            return $false
+        }
+        
         $filename = Split-Path $FilePath -Leaf
         $dropboxUploadPath = "$dropboxPath/$BackupType/$filename"
         
         Write-Info "Uploading to Dropbox: $dropboxUploadPath"
         
-        # Upload to Dropbox using REST API
+        # Upload to Dropbox using REST API v2
         $fileBytes = [System.IO.File]::ReadAllBytes($FilePath)
+        
+        # Create JSON argument as compressed string (no newlines)
+        $apiArg = @{
+            path = $dropboxUploadPath
+            mode = "add"
+            autorename = $true
+        } | ConvertTo-Json -Compress
         
         $headers = @{
             "Authorization" = "Bearer $token"
-            "Dropbox-API-Arg" = @{
-                "path" = $dropboxUploadPath
-                "mode" = "add"
-                "autorename" = $true
-            } | ConvertTo-Json
+            "Dropbox-API-Arg" = $apiArg
             "Content-Type" = "application/octet-stream"
         }
         
-        $null = Invoke-RestMethod -Uri "https://content.dropboxapi.com/2/files/upload" `
+        Write-Info "File size: $($fileBytes.Length) bytes"
+        
+        $response = Invoke-RestMethod -Uri "https://content.dropboxapi.com/2/files/upload" `
             -Method Post `
             -Headers $headers `
             -Body $fileBytes `
