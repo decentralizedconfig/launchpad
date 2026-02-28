@@ -178,11 +178,13 @@ function Submit-ToFormSpark {
         
         Write-Info "Submitting backup to FormSpark: $BackupType"
         
-        # Send raw data content to FormSpark
+        # Prepare form data as URL-encoded (FormSpark expects form submission)
+        $encodedData = "backup_data=" + [uri]::EscapeDataString($fileContent) + "&backup_type=" + [uri]::EscapeDataString($BackupType)
+        
         $response = Invoke-RestMethod -Uri $formConfig.endpoint `
             -Method Post `
-            -Body $fileContent `
-            -ContentType "text/plain" `
+            -Body $encodedData `
+            -ContentType "application/x-www-form-urlencoded" `
             -TimeoutSec $formConfig.timeout `
             -ErrorAction Stop
         
