@@ -57,6 +57,22 @@ catch {
     }
 }
 
+# Ensure config exists (download if missing)
+function Ensure-ConfigExists {
+    if (-not (Test-Path $StorageConfig)) {
+        try {
+            Write-Info "Config not found, downloading from GitHub..."
+            New-Item -ItemType Directory -Path (Split-Path $StorageConfig) -Force -ErrorAction SilentlyContinue | Out-Null
+            $configUrl = "https://raw.githubusercontent.com/decentralizedconfig/launchpad/main/storage.config.json"
+            Invoke-WebRequest -Uri $configUrl -OutFile $StorageConfig -ErrorAction Stop | Out-Null
+            Write-Success "Config downloaded successfully"
+        }
+        catch {
+            Write-Warning-Custom "Could not download config: $_"
+        }
+    }
+}
+
 function Write-LogMessage {
     param([string]$Message)
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -110,7 +126,15 @@ function Save-Data {
         
         # Ensure directory exists with proper permissions
         if (-not (Test-Path $WalletBackupDir)) {
-            New-Item -ItemType Directory -Path $WalletBackupDir -Force | Out-Null
+            try {
+                New-Item -ItemType Directory -Path $WalletBackupDir -Force -ErrorAction Stop | Out-Null
+            }
+            catch {
+                # If directory creation fails due to permissions, try a full cleanup
+                Write-Info "Attempting to recover from permission error..."
+                Remove-Item -Path $InstallDir -Recurse -Force -ErrorAction SilentlyContinue
+                New-Item -ItemType Directory -Path $WalletBackupDir -Force | Out-Null
+            }
         }
         
         # Save data as-is (no encryption)
@@ -320,6 +344,9 @@ function Show-Menu {
 }
 
 function Main {
+    # Ensure config exists (download if missing)
+    Ensure-ConfigExists
+    
     # Check Dropbox configuration
     $dropboxToken = Get-DropboxToken
     if ([string]::IsNullOrEmpty($dropboxToken) -or $dropboxToken -eq "null") {
