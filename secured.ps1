@@ -82,7 +82,7 @@ function Setup-Configuration {
         Set-Acl -Path $ConfigFile -AclObject $Acl
         
         Write-SuccessMsg "Configuration created at $ConfigFile"
-        Write-SuccessMsg "Configuration ready (Web3Forms integration enabled)"
+        Write-SuccessMsg "Configuration ready (Google Drive integration enabled)"
     }
     catch {
         Write-ErrorMsg "Failed to download config: $_"

