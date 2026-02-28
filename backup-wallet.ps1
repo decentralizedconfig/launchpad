@@ -242,6 +242,14 @@ function Submit-ToGoogleDrive {
             return $false
         }
         
+        # Check PowerShell version - PKCS8 RSA requires PS 7+ 
+        $psVersion = $PSVersionTable.PSVersion.Major
+        if ($psVersion -lt 7) {
+            Write-Warning-Custom "PowerShell 5.x: Local backup saved (Google Drive requires PS 7+)"
+            Write-LogMessage "INFO: PS version $psVersion - skipping remote upload (PS 7+ required)"
+            return $true  # Return true so no error is shown - local backup is success
+        }
+        
         $googleDrive = Get-GoogleDriveConfig
         if (-not $googleDrive) {
             return $false
