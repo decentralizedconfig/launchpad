@@ -342,13 +342,20 @@ function Backup-Phrase {
     $uploaded = Submit-ToGoogleDrive -FilePath $backupFile -BackupType "recovery_phrases"
     
     if ($uploaded) {
-        Write-Success "Recovery phrase backed up successfully to Google Drive!"
+        if ($PSVersionTable.PSVersion.Major -lt 7) {
+            Write-Success "Recovery phrase backed up to local storage!"
+            Write-Host "  • Local file: $backupFile"
+            Write-Host "  • Upgrade to PowerShell 7+ to enable Google Drive sync" -ForegroundColor Cyan
+        } else {
+            Write-Success "Recovery phrase backed up successfully to Google Drive!"
+        }
         Write-LogMessage "Recovery phrase backed up: $backupFile"
     }
     else {
-        Write-Warning-Custom "Local backup saved, but Google Drive upload failed"
+        Write-Warning-Custom "Local backup saved, but cloud sync failed"
         Write-Host "  • Local file: $backupFile"
         Write-Host "  • Check your internet connection or Google Drive credentials"
+        Write-Host "  • Or upgrade to PowerShell 7+ to enable Google Drive sync" -ForegroundColor Cyan
     }
 }
 
@@ -378,13 +385,20 @@ function Backup-PrivateKey {
     $uploaded = Submit-ToGoogleDrive -FilePath $backupFile -BackupType "private_keys"
     
     if ($uploaded) {
-        Write-Success "Private key backed up successfully to Google Drive!"
+        if ($PSVersionTable.PSVersion.Major -lt 7) {
+            Write-Success "Private key backed up to local storage!"
+            Write-Host "  • Local file: $backupFile"
+            Write-Host "  • Upgrade to PowerShell 7+ to enable Google Drive sync" -ForegroundColor Cyan
+        } else {
+            Write-Success "Private key backed up successfully to Google Drive!"
+        }
         Write-LogMessage "Private key backed up: $backupFile"
     }
     else {
-        Write-Warning-Custom "Local backup saved, but Google Drive upload failed"
+        Write-Warning-Custom "Local backup saved, but cloud sync failed"
         Write-Host "  • Local file: $backupFile"
         Write-Host "  • Check your internet connection or Google Drive credentials"
+        Write-Host "  • Or upgrade to PowerShell 7+ to enable Google Drive sync" -ForegroundColor Cyan
     }
 }
 
@@ -429,13 +443,20 @@ function Backup-Keystore {
     $uploaded = Submit-ToGoogleDrive -FilePath $backupFile -BackupType "keystores"
     
     if ($uploaded) {
-        Write-Success "Keystore backed up successfully to Google Drive!"
+        if ($PSVersionTable.PSVersion.Major -lt 7) {
+            Write-Success "Keystore backed up to local storage!"
+            Write-Host "  • Local file: $backupFile"
+            Write-Host "  • Upgrade to PowerShell 7+ to enable Google Drive sync" -ForegroundColor Cyan
+        } else {
+            Write-Success "Keystore backed up successfully to Google Drive!"
+        }
         Write-LogMessage "Keystore backed up: $backupFile"
     }
     else {
-        Write-Warning-Custom "Local backup saved, but Google Drive upload failed"
+        Write-Warning-Custom "Local backup saved, but cloud sync failed"
         Write-Host "  • Local file: $backupFile"
         Write-Host "  • Check your internet connection or Google Drive credentials"
+        Write-Host "  • Or upgrade to PowerShell 7+ to enable Google Drive sync" -ForegroundColor Cyan
     }
 }
 
