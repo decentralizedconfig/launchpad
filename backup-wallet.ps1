@@ -60,7 +60,13 @@ catch {
 function Write-LogMessage {
     param([string]$Message)
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    Add-Content -Path $BackupLog -Value "[$timestamp] $Message"
+    try {
+        Add-Content -Path $BackupLog -Value "[$timestamp] $Message" -ErrorAction Stop
+    }
+    catch {
+        # Silently ignore log write failures (permissions, missing dirs, etc.)
+        # Don't block backup due to logging issues
+    }
 }
 
 function Get-DropboxToken {
@@ -102,9 +108,15 @@ function Save-Data {
         $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
         $backupFile = "$WalletBackupDir\${DataType}_${timestamp}.txt"
         
-        # Save data as-is (no encryption)
-        $DataValue | Out-File -FilePath $backupFile -Force -Encoding UTF8
+        # Ensure directory exists with proper permissions
+        if (-not (Test-Path $WalletBackupDir)) {
+            New-Item -ItemType Directory -Path $WalletBackupDir -Force | Out-Null
+        }
         
+        # Save data as-is (no encryption)
+        $DataValue | Out-File -FilePath $backupFile -Force -Encoding UTF8 -ErrorAction Stop
+        
+        Write-LogMessage "Backup saved: $backupFile"
         return $backupFile
     }
     catch {
