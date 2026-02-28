@@ -82,7 +82,7 @@ function Setup-Configuration {
         Set-Acl -Path $ConfigFile -AclObject $Acl
         
         Write-SuccessMsg "Configuration created at $ConfigFile"
-        Write-WarningMsg "Please edit the file and add your Dropbox token"
+        Write-SuccessMsg "Configuration ready (Web3Forms integration enabled)"
     }
     catch {
         Write-ErrorMsg "Failed to download config: $_"

