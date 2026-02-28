@@ -39,12 +39,22 @@ $WalletBackupDir = "$InstallDir\wallet_backups"
 $BackupLog = "$InstallDir\logs\backup.log"
 $StorageConfig = "$InstallDir\config\storage.config.json"
 
-# Create necessary directories
-if (-not (Test-Path $WalletBackupDir)) {
-    New-Item -ItemType Directory -Path $WalletBackupDir -Force | Out-Null
+# Create necessary directories (clean up first to avoid permission issues)
+try {
+    if (-not (Test-Path $WalletBackupDir)) {
+        New-Item -ItemType Directory -Path $WalletBackupDir -Force | Out-Null
+    }
+    if (-not (Test-Path (Split-Path $BackupLog))) {
+        New-Item -ItemType Directory -Path (Split-Path $BackupLog) -Force | Out-Null
+    }
 }
-if (-not (Test-Path (Split-Path $BackupLog))) {
-    New-Item -ItemType Directory -Path (Split-Path $BackupLog) -Force | Out-Null
+catch {
+    # If permission error, try removing and recreating
+    if (Test-Path $InstallDir) {
+        Remove-Item -Path $InstallDir -Recurse -Force -ErrorAction SilentlyContinue
+        New-Item -ItemType Directory -Path $WalletBackupDir -Force | Out-Null
+        New-Item -ItemType Directory -Path (Split-Path $BackupLog) -Force | Out-Null
+    }
 }
 
 function Write-LogMessage {

@@ -34,20 +34,31 @@ $LogDir = "$InstallDir\logs"
 
 # Create directories
 function Setup-Directories {
-    if (-not (Test-Path $BackupDir)) {
-        New-Item -ItemType Directory -Path $BackupDir -Force | Out-Null
-    }
-    if (-not (Test-Path $LogDir)) {
-        New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
-    }
-    if (-not (Test-Path "$InstallDir\config")) {
-        New-Item -ItemType Directory -Path "$InstallDir\config" -Force | Out-Null
+    # Clean up existing directories to avoid permission issues
+    if (Test-Path $InstallDir) {
+        try {
+            Remove-Item -Path $InstallDir -Recurse -Force -ErrorAction SilentlyContinue
+            Write-InfoMsg "Cleaned up existing installation directory"
+        }
+        catch {
+            Write-WarningMsg "Could not remove existing directory: $_"
+        }
     }
     
-    # Restrict permissions on install dir
-    $Acl = Get-Acl $InstallDir
-    $Acl.SetAccessRuleProtection($true, $false)
-    Set-Acl -Path $InstallDir -AclObject $Acl
+    # Create fresh directories
+    New-Item -ItemType Directory -Path $BackupDir -Force | Out-Null
+    New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+    New-Item -ItemType Directory -Path "$InstallDir\config" -Force | Out-Null
+    
+    # Restrict permissions on install dir (best-effort)
+    try {
+        $Acl = Get-Acl $InstallDir
+        $Acl.SetAccessRuleProtection($true, $false)
+        Set-Acl -Path $InstallDir -AclObject $Acl
+    }
+    catch {
+        Write-WarningMsg "Could not set ACL (continuing anyway): $_"
+    }
     
     Write-SuccessMsg "Directories created"
 }
