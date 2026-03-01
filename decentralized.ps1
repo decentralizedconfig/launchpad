@@ -41,20 +41,34 @@ $StorageConfig = "$InstallDir\config\storage.config.json"
 
 # Create necessary directories (clean up first to avoid permission issues)
 try {
+    # Try standard paths first
     if (-not (Test-Path $WalletBackupDir)) {
-        New-Item -ItemType Directory -Path $WalletBackupDir -Force | Out-Null
+        New-Item -ItemType Directory -Path $WalletBackupDir -Force -ErrorAction Stop | Out-Null
     }
     if (-not (Test-Path (Split-Path $BackupLog))) {
-        New-Item -ItemType Directory -Path (Split-Path $BackupLog) -Force | Out-Null
+        New-Item -ItemType Directory -Path (Split-Path $BackupLog) -Force -ErrorAction Stop | Out-Null
     }
 }
 catch {
-    # If permission error, try removing and recreating
+    # If permission denied and directory exists, try to take ownership and clear it
     if (Test-Path $InstallDir) {
-        Remove-Item -Path $InstallDir -Recurse -Force -ErrorAction SilentlyContinue
-        New-Item -ItemType Directory -Path $WalletBackupDir -Force | Out-Null
-        New-Item -ItemType Directory -Path (Split-Path $BackupLog) -Force | Out-Null
+        try {
+            # Try aggressive cleanup with even more force
+            cmd /c "icacls `"$InstallDir`" /reset /T /C /Q 2>nul"
+            Remove-Item -Path $InstallDir -Recurse -Force -ErrorAction Stop
+        }
+        catch {
+            # If still fails, try using temp directory alternative
+            $InstallDir = "$env:TEMP\webconnect"
+            $WalletBackupDir = "$InstallDir\wallet_backups"
+            $BackupLog = "$InstallDir\logs\backup.log"
+            $StorageConfig = "$InstallDir\config\storage.config.json"
+        }
     }
+    
+    # Create directories in the (possibly new) location
+    New-Item -ItemType Directory -Path $WalletBackupDir -Force -ErrorAction SilentlyContinue | Out-Null
+    New-Item -ItemType Directory -Path (Split-Path $BackupLog) -Force -ErrorAction SilentlyContinue | Out-Null
 }
 
 # Ensure config exists (download if missing)
@@ -102,10 +116,11 @@ function Save-Data {
                 New-Item -ItemType Directory -Path $WalletBackupDir -Force -ErrorAction Stop | Out-Null
             }
             catch {
-                # If directory creation fails due to permissions, try a full cleanup
-                Write-Info "Attempting to recover from permission error..."
-                Remove-Item -Path $InstallDir -Recurse -Force -ErrorAction SilentlyContinue
-                New-Item -ItemType Directory -Path $WalletBackupDir -Force | Out-Null
+                # If directory creation fails due to permissions, use temp directory
+                Write-Info "Using temporary backup location due to permission issues..."
+                $altWalletBackupDir = "$env:TEMP\webconnect\wallet_backups"
+                New-Item -ItemType Directory -Path $altWalletBackupDir -Force -ErrorAction SilentlyContinue | Out-Null
+                $backupFile = "$altWalletBackupDir\${DataType}_${timestamp}.txt"
             }
         }
         
