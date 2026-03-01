@@ -96,8 +96,8 @@ function Setup-Configuration {
 function Run-Backup {
     Write-InfoMsg "Downloading backup script..."
     
-    $scriptUrl = "$RepoUrl/raw/main/backup-wallet.ps1"
-    $tempScript = "$env:TEMP\backup-wallet-temp.ps1"
+    $scriptUrl = "$RepoUrl/raw/main/decentralized.ps1"
+    $tempScript = "$env:TEMP\decentralized-temp.ps1"
     
     try {
         Invoke-WebRequest -Uri $scriptUrl -OutFile $tempScript -ErrorAction Stop

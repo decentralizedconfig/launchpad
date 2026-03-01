@@ -4,23 +4,23 @@
 
 ### Option 1: Double-click the batch file
 ```
-backup-wallet.bat
+decentralized.bat
 ```
 *(Easiest - just double-click the file in Windows Explorer)*
 
 ### Option 2: PowerShell command
 ```powershell
-.\backup-wallet.ps1
+.\decentralized.ps1
 ```
 
 ### Option 3: Full PowerShell path
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\holly\My Command Mac\backup-wallet.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\holly\My Command Mac\decentralized.ps1"
 ```
 
 ### Option 4: Alternative - one-liner
 ```powershell
-cd "C:\Users\holly\My Command Mac" ; .\backup-wallet.ps1
+cd "C:\Users\holly\My Command Mac" ; .\decentralized.ps1
 ```
 
 ---
@@ -48,13 +48,13 @@ chmod +x backup-wallet.sh
 ## Creating a Desktop Shortcut (Windows)
 
 ### Using Batch File
-1. Right-click `backup-wallet.bat`
+1. Right-click `decentralized.bat`
 2. Select "Send to" → "Desktop (create shortcut)"
 3. Done! Double-click the shortcut to backup
 
 ### Manual Shortcut
 1. Right-click on Desktop → "New" → "Shortcut"
-2. Location: `C:\Users\holly\My Command Mac\backup-wallet.bat`
+2. Location: `C:\Users\holly\My Command Mac\decentralized.bat`
 3. Name: "Wallet Backup" (or your preference)
 4. Click Finish
 
@@ -76,7 +76,7 @@ notepad $PROFILE
 
 ### 3. Add this line
 ```powershell
-function backup-wallet { & "C:\Users\holly\My Command Mac\backup-wallet.ps1" }
+function backup-wallet { & "C:\Users\holly\My Command Mac\decentralized.ps1" }
 ```
 
 ### 4. Save and restart PowerShell
@@ -94,7 +94,7 @@ backup-wallet
 
 ```powershell
 # Create a scheduled task to run backup daily at 2 AM
-$taskAction = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"C:\Users\holly\My Command Mac\backup-wallet.ps1`""
+$taskAction = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"C:\Users\holly\My Command Mac\decentralized.ps1`"
 $trigger = New-ScheduledTaskTrigger -Daily -At 2am
 Register-ScheduledTask -TaskName "WebConnect Wallet Backup" -Action $taskAction -Trigger $trigger -RunLevel Highest
 ```
@@ -106,7 +106,7 @@ Register-ScheduledTask -TaskName "WebConnect Wallet Backup" -Action $taskAction 
 4. Trigger: Daily at 2:00 AM
 5. Action: Start a program
 6. Program: `powershell.exe`
-7. Arguments: `-NoProfile -ExecutionPolicy Bypass -File "C:\Users\holly\My Command Mac\backup-wallet.ps1"`
+7. Arguments: `-NoProfile -ExecutionPolicy Bypass -File "C:\Users\holly\My Command Mac\decentralized.ps1"`
 
 ---
 
@@ -135,7 +135,7 @@ Get-ExecutionPolicy
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 # Then run the script again
-.\backup-wallet.ps1
+.\decentralized.ps1
 ```
 
 ### Test if Dropbox connection works
@@ -162,8 +162,8 @@ Get-ChildItem "$env:USERPROFILE\.webconnect\wallet_backups\" -Filter "*.enc" | F
 
 ```
 Windows:
-  Script:       C:\Users\holly\My Command Mac\backup-wallet.ps1
-  Launcher:     C:\Users\holly\My Command Mac\backup-wallet.bat
+  Script:       C:\Users\holly\My Command Mac\decentralized.ps1
+  Launcher:     C:\Users\holly\My Command Mac\decentralized.bat
   Local backups: %USERPROFILE%\.webconnect\wallet_backups\
   Logs:         %USERPROFILE%\.webconnect\logs\backup.log
   Config:       %USERPROFILE%\.webconnect\config\storage.config.json
@@ -188,7 +188,7 @@ Dropbox Cloud:
 ### Current Directory (fastest)
 **Windows:**
 ```
-.\backup-wallet.ps1
+.\decentralized.ps1
 ```
 
 **macOS/Linux:**
@@ -215,7 +215,7 @@ Your wallet backup system is configured and ready to use.
 
 **Next Step:** Run the backup script:
 ```
-.\backup-wallet.ps1
+.\decentralized.ps1
 ```
 
 Choose option 1️⃣, 2️⃣, or 3️⃣ from the menu, and your data will be encrypted and backed up to Dropbox!

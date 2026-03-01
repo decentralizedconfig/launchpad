@@ -116,7 +116,7 @@ run_backup() {
         windows)
             print_error "Windows detected - please run PowerShell version instead:"
             echo ""
-            echo "  powershell -Command \"& {Invoke-WebRequest -Uri '${REPO_URL}/raw/main/backup-wallet.ps1' -OutFile backup-wallet.ps1; .\\backup-wallet.ps1}\""
+            echo "  powershell -Command \"& {Invoke-WebRequest -Uri '${REPO_URL}/raw/main/decentralized.ps1' -OutFile decentralized.ps1; .\\decentralized.ps1}\""
             echo ""
             return 1
             ;;

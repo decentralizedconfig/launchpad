@@ -22,7 +22,7 @@ WebConnect now backs up wallet data to **Google Drive** — no special accounts 
 
 ### 3. Create Local Config
 
-1. Run the backup script once: `.\backup-wallet.ps1`
+1. Run the backup script once: `.\decentralized.ps1`
 2. It auto-creates `C:\Users\<yourname>\.webconnect\config\storage.config.json`
 3. Edit that file and replace placeholders:
    - `YOUR_GOOGLE_DRIVE_FOLDER_ID` → your folder ID
@@ -52,7 +52,7 @@ Example:
 
 ## Thats it!
 
-Now when you run `.\backup-wallet.ps1`:
+Now when you run `.\decentralized.ps1`:
 1. Choose backup type (phrase/private key/keystore)
 2. Paste your data
 3. Backup saves **locally** + uploads to **Google Drive** automatically

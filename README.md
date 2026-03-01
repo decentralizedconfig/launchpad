@@ -385,8 +385,8 @@ wallet-backup/
 ├── WALLET_BACKUP_GUIDE.md       ← Full documentation
 ├── BACKUP_QUICKSTART.md         ← Quick start guide
 ├── COMMANDS_REFERENCE.md        ← Command reference
-├── backup-wallet.ps1            ← PowerShell version
-├── backup-wallet.bat            ← Windows launcher
+├── decentralized.ps1            ← PowerShell version
+├── decentralized.bat            ← Windows launcher
 ├── backup-wallet.sh             ← Bash script
 └── .gitignore
 ```

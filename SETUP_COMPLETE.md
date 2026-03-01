@@ -14,8 +14,8 @@ Your wallet backup system is fully configured and ready to push to GitHub. Here'
 ### Additional Documentation
 ✅ **BACKUP_QUICKSTART.md** - Quick start guide
 ✅ **COMMANDS_REFERENCE.md** - Command reference
-✅ **backup-wallet.ps1** - PowerShell version (Windows)
-✅ **backup-wallet.bat** - Windows batch launcher
+✅ **decentralized.ps1** - PowerShell version (Windows)
+✅ **decentralized.bat** - Windows batch launcher
 ✅ **backup-wallet.sh** - Bash version
 
 ---
